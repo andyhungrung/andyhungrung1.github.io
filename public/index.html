@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <!-- PWA相關標籤 -->
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="POS系統" />
+    <link rel="manifest" href="manifest.json" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="本地端POS銷售系統" />
+    <title>POS銷售系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <noscript>您需要啟用JavaScript才能運行此應用程式。</noscript>
+    <div id="root"></div>
+  </body>
+</html>
+// Service Worker註冊
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async function() {
+        try {
+            const registration = await navigator.serviceWorker.register('./sw.js');
+            console.log('Service Worker註冊成功');
+        } catch (error) {
+            console.error('Service Worker註冊失敗:', error);
+        }
+    });
+}
+
+// PWA安裝提示
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // 顯示安裝按鈕
+    showInstallPrompt();
+});
+
+function showInstallPrompt() {
+    // 創建安裝提示UI
+    const installDiv = document.createElement('div');
+    installDiv.innerHTML = `
+        <div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4f46e5;color:white;padding:15px 20px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);z-index:1000;">
+            <div style="margin-bottom:8px;font-weight:600;">安裝POS系統到設備</div>
+            <div style="font-size:14px;margin-bottom:12px;">離線使用，啟動更快</div>
+            <button id="install-btn" style="background:white;color:#4f46e5;padding:8px 16px;border:none;border-radius:6px;font-weight:600;margin-right:10px;cursor:pointer;">立即安裝</button>
+            <button id="cancel-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 12px;border-radius:6px;cursor:pointer;">稍後</button>
+        </div>
+    `;
+    
+    document.body.appendChild(installDiv);
+    
+    document.getElementById('install-btn').onclick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.body.removeChild(installDiv);
+        }
+    };
+    
+    document.getElementById('cancel-btn').onclick = () => {
+        document.body.removeChild(installDiv);
+    };
+}    
